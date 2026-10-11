@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>智慧农场 · 数字孪生大数据平台</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M32 6c10 10 14 22 0 52C18 28 22 16 32 6z' fill='%2336e6ff'/></svg>" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="scene"></div>
+  <div id="labels"></div>
+
+  <div id="hud">
+    <!-- 顶栏 -->
+    <header class="topbar">
+      <div class="tb-left">
+        <div class="wx"><span class="wx-icon" id="wx-icon">☀</span><span id="wx-temp" class="num">--</span><span class="unit">℃</span></div>
+        <div class="wx-items">
+          <span>湿度 <b id="wx-rh" class="num">--</b>%</span>
+          <span>风速 <b id="wx-wind" class="num">--</b>m/s</span>
+          <span>辐射 <b id="wx-solar" class="num">--</b>W/m²</span>
+          <span>ET₀ <b id="wx-et0" class="num">--</b>mm/h</span>
+        </div>
+      </div>
+      <div class="tb-title">
+        <div class="tb-wing l"></div>
+        <h1>智慧农场 · 数字孪生大数据平台</h1>
+        <div class="tb-sub">SMART FARM DIGITAL TWIN · IoT × AI VISION × CROP & LIVESTOCK MODELING</div>
+        <div class="tb-wing r"></div>
+      </div>
+      <div class="tb-right">
+        <div class="clock"><span id="sim-date">--</span><b id="sim-time" class="num">--:--</b></div>
+        <div class="sys">
+          <span><i class="dot ok"></i>设备在线 <b id="sys-online" class="num">--</b></span>
+          <span>数据流 <b id="sys-rate" class="num">--</b> 条/秒</span>
+        </div>
+        <button class="icon-btn" id="btn-hide" title="隐藏界面 (H)">⛶</button>
+      </div>
+    </header>
+
+    <!-- 左列 -->
+    <aside class="col left">
+      <section class="panel">
+        <h2><span>农场总览</span><em>OVERVIEW</em></h2>
+        <div class="kpis">
+          <div class="kpi"><label>经营面积</label><b class="num" data-count="1280">0</b><small>亩</small></div>
+          <div class="kpi"><label>牲畜存栏</label><b class="num" id="kpi-animals">0</b><small>头/只</small></div>
+          <div class="kpi"><label>物联网节点</label><b class="num" id="kpi-nodes">0</b><small>个</small></div>
+          <div class="kpi wide"><label>今日采集数据</label><b class="num big" id="kpi-data">0</b><small>条</small></div>
+          <div class="kpi"><label>AI 识别准确率</label><b class="num" id="kpi-acc">98.7</b><small>%</small></div>
+          <div class="kpi"><label>光伏实时功率</label><b class="num" id="kpi-pv">0</b><small>kW</small></div>
+          <div class="kpi"><label>今日节水</label><b class="num" id="kpi-water">0</b><small>m³</small></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2><span>环境感知 · 24h</span><em>ENVIRONMENT</em></h2>
+        <div class="chart" id="chart-env"></div>
+        <div class="mini-stats">
+          <div><label>光照</label><b class="num" id="env-lux">--</b><small>klx</small></div>
+          <div><label>CO₂</label><b class="num" id="env-co2">--</b><small>ppm</small></div>
+          <div><label>露点</label><b class="num" id="env-dew">--</b><small>℃</small></div>
+          <div><label>土壤墒情</label><b class="num" id="env-soil">--</b><small>%</small></div>
+        </div>
+      </section>
+
+      <section class="panel panel-vision">
+        <h2><span>AI 视觉识别 · UAV-01</span><em>DETECTION</em></h2>
+        <div class="feed-modes">
+          <button data-feed="rgb" class="on">可见光</button>
+          <button data-feed="ndvi">多光谱 NDVI</button>
+          <button data-feed="thermal">红外热成像</button>
+        </div>
+        <div class="feed" id="feed"><canvas id="feed-overlay"></canvas></div>
+        <div class="feed-stats" id="feed-stats">--</div>
+      </section>
+    </aside>
+
+    <!-- 右列 -->
+    <aside class="col right">
+      <section class="panel">
+        <h2><span>产量预测模型</span><em>YIELD · MONTE CARLO</em></h2>
+        <div class="tabs" id="yield-tabs">
+          <button data-plot="A2" class="on">水稻</button>
+          <button data-plot="B1">玉米</button>
+          <button data-plot="G1">番茄</button>
+          <button data-plot="O1">苹果</button>
+          <button data-plot="P1">苜蓿</button>
+        </div>
+        <div class="yield-head">
+          <div><label>预测单产 P50</label><b class="num" id="y-mean">--</b><small id="y-unit">kg/亩</small></div>
+          <div><label>80% 置信区间</label><b class="num sm" id="y-ci">--</b></div>
+          <div><label>距收获</label><b class="num sm" id="y-days">--</b><small>天</small></div>
+        </div>
+        <div class="chart" id="chart-yield"></div>
+      </section>
+
+      <section class="panel">
+        <h2><span>地块长势 · 病害风险</span><em>NDVI × RISK</em></h2>
+        <div class="chart" id="chart-plots"></div>
+      </section>
+
+      <section class="panel">
+        <h2><span>牲畜健康监测</span><em>LIVESTOCK AI</em></h2>
+        <div class="live-row">
+          <div class="chart" id="chart-livestock"></div>
+          <ul class="ani-list" id="ani-list"></ul>
+        </div>
+      </section>
+
+      <section class="panel panel-events">
+        <h2><span>智能决策 · 预警中心</span><em>EVENTS</em></h2>
+        <ul class="events" id="events"></ul>
+      </section>
+    </aside>
+
+    <!-- 底部 -->
+    <div class="bottom">
+      <div class="timebar">
+        <button class="icon-btn" id="btn-play" title="暂停/继续 (空格)">❚❚</button>
+        <div class="speeds">
+          <button data-speed="60">×60</button>
+          <button data-speed="240" class="on">×240</button>
+          <button data-speed="960">×960</button>
+        </div>
+        <input type="range" id="time-slider" min="0" max="24" step="0.05" value="6" />
+        <span class="tod" id="tod-label">--</span>
+      </div>
+      <nav class="modebar" id="modebar">
+        <button data-mode="overview" class="on"><i>◈</i>全景总览</button>
+        <button data-mode="crop"><i>❀</i>作物识别</button>
+        <button data-mode="livestock"><i>◉</i>牲畜追踪</button>
+        <button data-mode="iot"><i>⌬</i>传感网络</button>
+        <button data-mode="drone"><i>✈</i>无人机巡检</button>
+        <button data-mode="tour"><i>▶</i>自动巡游</button>
+      </nav>
+    </div>
+
+    <!-- 详情卡片 -->
+    <div class="detail hidden" id="detail">
+      <button class="close" id="detail-close">×</button>
+      <div class="d-head"><span class="d-type" id="d-type">--</span><h3 id="d-title">--</h3></div>
+      <div class="d-grid" id="d-grid"></div>
+      <div class="chart" id="chart-detail"></div>
+      <div class="d-ai" id="d-ai"></div>
+      <div class="d-actions" id="d-actions"></div>
+    </div>
+    <div class="toast-wrap" id="toasts"></div>
+  </div>
+
+  <button class="show-hud hidden" id="btn-show">显示界面</button>
+
+  <!-- 启动画面 -->
+  <div id="loader">
+    <div class="ld-ring"><div></div><div></div><div></div></div>
+    <h2>智慧农场数字孪生平台</h2>
+    <div class="ld-log" id="ld-log"></div>
+    <div class="ld-bar"><i id="ld-bar"></i></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
